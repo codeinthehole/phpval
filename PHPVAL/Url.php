@@ -1,8 +1,14 @@
 <?php
 /**
- * @package PHPVAL
+ * phpval
+ * 
+ * Copyright (c) 2009, David Winterbottom <david.winterbottom@gmail.com>.
+ * All rights reserved.
+ * 
+ * @package phpval
  * @author David Winterbottom <david.winterbottom@gmail.com>
- * @version $Id$
+ * @copyright 2009 David Winterbottom <david.winterbottom@gmail.com>
+ * @license http://www.opensource.org/licenses/bsd-license.php  BSD License
  */
 
 /**
@@ -11,13 +17,25 @@
  * Note that the protocol and domain components are optional, it is perfectly valid
  * to use URLs that are relative to the document root (eg /my/page?q=barry).
  *
- * @package PHPVAL
+ * See http://www.ietf.org/rfc/rfc2396.txt for the appropriate RFC
+ * 
+ * @author David Winterbottom <david.winterbottom@gmail.com>
+ * @copyright 2009 David Winterbottom <david.winterbottom@gmail.com>
+ * @license http://www.opensource.org/licenses/bsd-license.php  BSD License
+ * @version $Id$
  */
-class Url
+class PHPVAL_Url
 {
-    const PROTOCOL_HTTP  = 'http';
+    const PROTOCOL_HTTP = 'http';
     const PROTOCOL_HTTPS = 'https';
+    const PROTOCOL_FTP = 'ftp';
+    const PROTOCOL_GOPHER = 'gopher';
+    const PROTOCOL_MAILTO = 'mailto';
+    const PROTOCOL_TELNET = 'telnet';
 
+    const PATH_SEPARATOR = '/';
+    const PROTOCOL_SEPARATOR = '://';
+    
     /**
      * @var string
      */
@@ -27,6 +45,16 @@ class Url
      * @var string
      */
     protected $host;
+    
+    /**
+     * @var string
+     */
+    protected $username;
+    
+    /**
+     * @var string
+     */
+    protected $password;
     
     /**
      * @var int
@@ -48,113 +76,14 @@ class Url
     /**
      * Protected constructor - use the factory methods to create
      */
-    protected function __construct($protocol, $host, $port, $pathname, $queryString) 
+    public function __construct($protocol, $domain, $port, $pathname, $queryString='', $hash='') 
     {
-        $this->protocol = $protocol;
-        $this->host = $host;
-        $this->port = $port;
-        $this->pathname = $pathname;
-        $this->queryString = $queryString;
-    }
-
-    // ========
-    // CREATION
-    // ========
-
-    /**
-     * Create object using current requests data from the $_SERVER superglobal
-     *
-     * @return Url
-     */
-    public static function createFromCurrentRequest()
-    {
-        $url = new self;
-
-        // Set protocol
-        if (isset($_SERVER['HTTPS']) && !empty($_SERVER['HTTPS'])) {
-            $url->setProtocol(self::PROTOCOL_HTTPS);
-        } else {
-            $url->setProtocol(self::PROTOCOL_HTTP);
-        }
-        if (isset($_SERVER['HTTP_HOST'])) {
-            $url->setDomain($_SERVER['HTTP_HOST']);
-        }
-
-        $components = explode('?', $_SERVER['REQUEST_URI']);
-        $url->setPathname($components[0]);
-
-        // Set query string and params
-        if (isset($components[1])) {
-            $url->setQueryString($components[1]);
-        }
-
-        return $url;
-    }
-
-    /**
-     * Returns the URL object from the referring URL
-     * 
-     * @return Url
-     */
-    public static function createFromReferrer()
-    {
-        return self::createFromAbsoluteUrl($_SERVER['HTTP_REFERER']);
-    }
-
-    /**
-     * Create object with a full URL
-     *
-     * @param string $url
-     * @return Url
-     */
-    public static function createFromAbsoluteUrl($urlString)
-    {
-        $urlString = trim($urlString);
-        
-        $protocol = null;
-        $protocolComponents = explode('://', $urlString);
-        if (count($protocolComponents) == 2) $protocol = $protocolComponents[0];
-        
-        $components = explode('/', $urlString);
-        $host = $components[2];
-
-        $port = null;
-    
-        $pathname = '/';
-        $queryString = null;
-        if (count($components) > 3) {
-            $pathnameAndQueryString = '/'.implode('/', array_slice($components, 3));
-            $pathComponents = explode('?', $pathnameAndQueryString);
-            $pathname = $pathComponents[0];
-
-            if (count($pathComponents) > 1) {
-                $queryString = $pathComponents[1];
-            }
-        }
-        return new self($protocol, $host, $port, $pathname, $queryString);
-    }
-
-    /**
-     * Creates object using a relative URL
-     *
-     * The object returned will not have a domain or protocol
-     *
-     * @param $url
-     * @return url_Object
-     */
-    public static function createFromRelativeUrl($urlString='/')
-    {
-        $urlString = (string)$urlString;
-        $url = new self;
-        if ($urlString{0} != '/') {
-            $urlString = '/'.$urlString;
-        }
-        $pathComponents = explode('?', $urlString);
-        $url->setPathname($pathComponents[0]);
-        if (count($pathComponents) > 1) {
-            $url->setQueryString($pathComponents[1]);
-        }
-        return $url;
+        $this->protocol = (string)$protocol;
+        $this->domain = (string)$domain;
+        $this->port = (int)$port;
+        $this->pathname = (string)$pathname;
+        $this->queryString = (string)$queryString;
+        $this->hash = $hash;
     }
 
     // ============
@@ -305,6 +234,11 @@ class Url
         return $this->domain;
     }
 
+    public function getPort()
+    {
+        return $this->port;
+    }
+    
     /**
      * Returns the pathname
      *
