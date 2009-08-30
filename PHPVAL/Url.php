@@ -22,7 +22,6 @@
  * @author David Winterbottom <david.winterbottom@gmail.com>
  * @copyright 2009 David Winterbottom <david.winterbottom@gmail.com>
  * @license http://www.opensource.org/licenses/bsd-license.php  BSD License
- * @version $Id$
  */
 class PHPVAL_Url
 {
@@ -74,9 +73,14 @@ class PHPVAL_Url
     protected $queryString;
 
     /**
+     * @var string
+     */
+    protected $hash;
+    
+    /**
      * Protected constructor - use the factory methods to create
      */
-    public function __construct($protocol, $domain, $port, $pathname, $queryString='', $hash='') 
+    public function __construct($protocol, $domain, $port=80, $pathname=self::PATH_SEPARATOR, $queryString='', $hash='') 
     {
         $this->protocol = (string)$protocol;
         $this->domain = (string)$domain;
@@ -100,6 +104,9 @@ class PHPVAL_Url
     {
         $newUrl = clone $this;
         $newUrl->protocol = $protocol;
+        if (self::PROTOCOL_HTTPS == $protocol) {
+            $newUrl->port = 443;
+        }
         return $newUrl;
     }
 
@@ -111,8 +118,9 @@ class PHPVAL_Url
      */
     public function setDomain($domain)
     {
-        $this->domain = $domain;
-        return $this;
+        $newUrl = clone $this;
+        $newUrl->domain = $domain;
+        return $newUrl;
     }
 
     /**
@@ -124,28 +132,16 @@ class PHPVAL_Url
      * @param string $pathname
      * @return url_Object
      */
-    public function setPathname($pathname='/')
+    public function setPathname($pathname=self::PATH_SEPARATOR)
     {
-        if ($pathname{0} != '/') {
-            $pathname = '/'.$pathname;
+        $newUrl = clone $this;
+        $pathname = trim($pathname);
+        if (0 == strlen($pathname)) $pathname = self::PATH_SEPARATOR;
+        if ($pathname{0} != self::PATH_SEPARATOR) {
+            $pathname = self::PATH_SEPARATOR.$pathname;
         }
-        $this->pathname = $pathname;
-        return $this;
-    }
-
-    /**
-     * Sets the query string for this URL
-     *
-     * @return string
-     */
-    public function setQueryString($queryString='')
-    {
-        // Remove starting question mark if it exists
-        if ($queryString{1} == '?') {
-            $queryString = substr($queryString, 1);
-        }
-        $this->queryString = $queryString;
-        return $this;
+        $newUrl->pathname = $pathname;
+        return $newUrl;
     }
     
     /**
@@ -156,6 +152,7 @@ class PHPVAL_Url
      */
     public function setQueryParams(array $params)
     {
+        $newUrl = clone $this;
         $pairs = array();
         foreach ($params as $key => $value) {
             if (!empty($value)) {
@@ -164,8 +161,8 @@ class PHPVAL_Url
                 $pairs[] = urlencode($key);
             }
         }
-        $this->queryString = implode('&', $pairs);
-        return $this;
+        $newUrl->queryString = implode('&', $pairs);
+        return $newUrl;
     }
     
     /**
@@ -177,10 +174,11 @@ class PHPVAL_Url
      */
     public function setQueryParam($parameter, $value='')
     {
+        $newUrl = clone $this;
         $params = $this->getQueryParams();
         $params[$parameter] = $value;
-        $this->setQueryParams($params);
-        return $this;
+        $newUrl->setQueryParams($params);
+        return $newUrl;
     }
     
     /**
@@ -190,8 +188,9 @@ class PHPVAL_Url
      */
     public function removeQueryParams()
     {
-        $this->queryString = '';
-        return $this;
+        $newUrl = clone $this;
+        $newUrl->queryString = '';
+        return $newUrl;
     }
     
     /**
@@ -201,13 +200,14 @@ class PHPVAL_Url
      */
     public function removeQueryParam($parameter)
     {
+        $newUrl = clone $this;
         $parameter = (string)$parameter;
         $params = $this->getQueryParams();
         if (array_key_exists($parameter, $params)) {
             unset($params[$parameter]);
-            $this->setQueryParams($params);
+            $newUrl->setQueryParams($params);
         }
-        return $this;
+        return $newUrl;
     }
 
     // =============
@@ -234,6 +234,9 @@ class PHPVAL_Url
         return $this->domain;
     }
 
+    /**
+     * @return int
+     */
     public function getPort()
     {
         return $this->port;
@@ -250,6 +253,34 @@ class PHPVAL_Url
     }
 
     /**
+     * Returns the URL path segments
+     * 
+     * @return array
+     */
+    public function getPathSegments()
+    {
+        $regExp = sprintf('@^%s|%s$@', self::PATH_SEPARATOR, self::PATH_SEPARATOR);
+        $cleanedPath = trim(preg_replace($regExp, '', $this->getPathname()));
+        return (!empty($cleanedPath)) ? explode(self::PATH_SEPARATOR, $cleanedPath) : array();
+    }
+    
+    /**
+     * Returns the URL segment at a specific position
+     * 
+     * @param int $segmentIndex
+     * @return string|null
+     */
+    public function getPathSegment($segmentIndex=0)
+    {
+        $segmentNum = (int)$segmentIndex;
+        $segments = $this->getPathSegments();
+        if (count($segments) < $segmentNum+1) {
+            return null;
+        }
+        return $segments[$segmentNum];
+    }
+    
+    /**
      * Returns the query string
      *
      * @return string
@@ -259,59 +290,6 @@ class PHPVAL_Url
         return $this->queryString;
     }
 
-    /**
-     * Returns the base URL
-     * 
-     * @return string|null
-     */
-    public function getBaseUrl()
-    {
-        if (!$this->domain) return null;
-        $protocol = ($this->protocol) ? $this->protocol : self::PROTOCOL_HTTP;
-        return sprintf("%s://%s", $protocol, $this->domain);
-    }
-
-    /**
-     * Returns the URL relative to the document root
-     * 
-     * @return string
-     */
-    public function getDocumentRootUrl()
-    {
-        $url = $this->pathname;
-        if ($this->queryString) {
-            $url .= '?'.$this->queryString;
-        }
-        return $url;
-    }
-
-    /**
-     * Returns the URL path segments
-     * 
-     * @return array
-     */
-    public function getPathSegments()
-    {
-        $cleanedPath = trim(preg_replace('@^/|/$@', '', $this->getPathname()));
-        return (!empty($cleanedPath)) ? explode('/', $cleanedPath) : array();
-    }
-    
-    /**
-     * Returns the URL segment at a specific position
-     * 
-     * @param int $segmentIndex
-     * @return string
-     */
-    public function getPathSegment($segmentIndex=0)
-    {
-        $segmentNum = (int)$segmentIndex;
-        $segments = $this->getPathSegments();
-        if (count($segments) < $segmentNum+1) {
-            return false;
-        }
-        return $segments[$segmentNum];
-    }
-    
     /**
      * Returns all the query parameters as a hash
      * 
@@ -346,7 +324,18 @@ class PHPVAL_Url
             $value = $params[$parameter];
             return empty($value) ? true : $value;
         }
-        return false;
+        return null;
+    }
+    
+    /**
+     * Returns the base URL
+     * 
+     * @return url_Object
+     */
+    public function getBaseUrl()
+    {
+        if (!$this->protocol || !$this->domain) return null;
+        return new self($this->protocol, $this->domain);
     }
     
     /**
@@ -361,10 +350,13 @@ class PHPVAL_Url
     {
         $url = $this->pathname;
         if (!empty($this->protocol) && !empty($this->domain)) {
-            $url = $this->protocol.'://'.$this->domain.$url;
+            $url = $this->protocol.self::PROTOCOL_SEPARATOR.$this->domain.$url;
         }
         if ($this->queryString) {
             $url .= '?'.$this->queryString;
+        }
+        if ($this->hash) {
+            $url .= '#'.$this->hash;
         }
         return $url;
     }
