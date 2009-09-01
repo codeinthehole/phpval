@@ -1,30 +1,15 @@
 <?php
 
-require_once dirname(__FILE__).'/Bootstrap.php';
-require_once dirname(__FILE__).'/../PHPVAL/Url.php';
+require_once dirname(__FILE__).'/../Bootstrap.php';
+require_once dirname(__FILE__).'/../../PHPVAL/Url/Relative.php';
 
-class PHPVAL_TestUrlGetters extends PHPUnit_Framework_TestCase
+class PHPVAL_Url_TestRelative extends PHPUnit_Framework_TestCase
 {
     private $url;
     
     public function setUp()
     {
-        $this->url = new PHPVAL_Url('http', 'www.google.com', 80, '/page/123', 'q=hello&nocache', 'randomhash');
-    }
-    
-    public function testGetProtocol()
-    {
-        $this->assertSame('http', $this->url->getProtocol());
-    }
-    
-    public function testGetHost()
-    {
-        $this->assertSame('www.google.com', $this->url->getDomain());
-    }
-    
-    public function testGetPort()
-    {
-        $this->assertSame(80, $this->url->getPort());
+        $this->url = new PHPVAL_Url_Relative('/page/123', 'q=hello&nocache', 'randomhash');
     }
     
     public function testGetPathname()
@@ -67,18 +52,29 @@ class PHPVAL_TestUrlGetters extends PHPUnit_Framework_TestCase
         $this->assertSame('q=hello&nocache', $this->url->getQueryString());
     }
     
-    public function testGetBaseUrlReturnsUrlObject()
+    public function testSetPathnameReturnsNewUrlObject()
     {
-        $this->assertTrue($this->url->getBaseUrl() instanceof PHPVAL_Url);
+        $newUrl = $this->url->setPathname('a-random-page');
+        $this->assertTrue($newUrl instanceof PHPVAL_Url_Relative);
+        $this->assertTrue($newUrl !== $this->url);
     }
     
-    public function testToString()
+    public function testSetPathname()
     {
-        $this->assertSame('http://www.google.com/page/123?q=hello&nocache#randomhash', $this->url->toString());
+        $newUrl = $this->url->setPathname('a-random-page');
+        $this->assertSame('/a-random-page?q=hello&nocache#randomhash', $newUrl->toString());
     }
     
-    public function testMagicToString()
+    public function testSetQueryParamsReturnsNewUrlObject()
     {
-        $this->assertSame('http://www.google.com/page/123?q=hello&nocache#randomhash', (string)$this->url);
+        $newUrl = $this->url->setQueryParams(array('q' => 'asdf'));
+        $this->assertTrue($newUrl instanceof PHPVAL_Url_Relative);
+        $this->assertTrue($newUrl !== $this->url);
+    }
+    
+    public function testSetQueryParams()
+    {
+        $newUrl = $this->url->setQueryParams(array('q' => 'asdf'));
+        $this->assertSame('/page/123?q=asdf#randomhash', $newUrl->toString());
     }
 }

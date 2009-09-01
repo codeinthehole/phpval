@@ -12,7 +12,7 @@
  */
 
 /**
- * Simple URL object.
+ * Relative URL object.
  *
  * Note that the protocol and domain components are optional, it is perfectly valid
  * to use URLs that are relative to the document root (eg /my/page?q=barry).
@@ -23,42 +23,9 @@
  * @copyright 2009 David Winterbottom <david.winterbottom@gmail.com>
  * @license http://www.opensource.org/licenses/bsd-license.php  BSD License
  */
-class PHPVAL_Url
+class PHPVAL_Url_Relative
 {
-    const PROTOCOL_HTTP = 'http';
-    const PROTOCOL_HTTPS = 'https';
-    const PROTOCOL_FTP = 'ftp';
-    const PROTOCOL_GOPHER = 'gopher';
-    const PROTOCOL_MAILTO = 'mailto';
-    const PROTOCOL_TELNET = 'telnet';
-
     const PATH_SEPARATOR = '/';
-    const PROTOCOL_SEPARATOR = '://';
-    
-    /**
-     * @var string
-     */
-    protected $protocol;
-
-    /**
-     * @var string
-     */
-    protected $host;
-    
-    /**
-     * @var string
-     */
-    protected $username;
-    
-    /**
-     * @var string
-     */
-    protected $password;
-    
-    /**
-     * @var int
-     */
-    protected $port;
 
     /**
      * @var string
@@ -80,11 +47,8 @@ class PHPVAL_Url
     /**
      * Protected constructor - use the factory methods to create
      */
-    public function __construct($protocol, $domain, $port=80, $pathname=self::PATH_SEPARATOR, $queryString='', $hash='') 
+    public function __construct($pathname=self::PATH_SEPARATOR, $queryString='', $hash='') 
     {
-        $this->protocol = (string)$protocol;
-        $this->domain = (string)$domain;
-        $this->port = (int)$port;
         $this->pathname = (string)$pathname;
         $this->queryString = (string)$queryString;
         $this->hash = $hash;
@@ -93,35 +57,6 @@ class PHPVAL_Url
     // ============
     // MANIPULATION
     // ============
-
-    /**
-     * Sets the domain for this URL
-     *
-     * @param string $domain
-     * @return url_Object
-     */
-    public function setProtocol($protocol=self::PROTOCOL_HTTP)
-    {
-        $newUrl = clone $this;
-        $newUrl->protocol = $protocol;
-        if (self::PROTOCOL_HTTPS == $protocol) {
-            $newUrl->port = 443;
-        }
-        return $newUrl;
-    }
-
-    /**
-     * Sets the domain for this URL
-     *
-     * @param string $domain
-     * @return url_Object
-     */
-    public function setDomain($domain)
-    {
-        $newUrl = clone $this;
-        $newUrl->domain = $domain;
-        return $newUrl;
-    }
 
     /**
      * Sets the pathname for this URL
@@ -213,34 +148,6 @@ class PHPVAL_Url
     // =============
     // INTERROGATION
     // =============
-
-    /**
-     * Returns the protocol of the URL
-     *
-     * @return string
-     */
-    public function getProtocol()
-    {
-        return $this->protocol;
-    }
-
-    /**
-     * Returns the domain of the URL
-     *
-     * @return string
-     */
-    public function getDomain()
-    {
-        return $this->domain;
-    }
-
-    /**
-     * @return int
-     */
-    public function getPort()
-    {
-        return $this->port;
-    }
     
     /**
      * Returns the pathname
@@ -328,17 +235,6 @@ class PHPVAL_Url
     }
     
     /**
-     * Returns the base URL
-     * 
-     * @return url_Object
-     */
-    public function getBaseUrl()
-    {
-        if (!$this->protocol || !$this->domain) return null;
-        return new self($this->protocol, $this->domain);
-    }
-    
-    /**
      * Returns the URL as a single string.
      *
      * If the domain and protocol are defined then the URL will be absolute (eg: http://www.egg.com).
@@ -349,9 +245,6 @@ class PHPVAL_Url
     public function toString()
     {
         $url = $this->pathname;
-        if (!empty($this->protocol) && !empty($this->domain)) {
-            $url = $this->protocol.self::PROTOCOL_SEPARATOR.$this->domain.$url;
-        }
         if ($this->queryString) {
             $url .= '?'.$this->queryString;
         }
