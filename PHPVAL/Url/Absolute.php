@@ -80,8 +80,9 @@ class PHPVAL_Url_Absolute extends PHPVAL_Url_Relative
      */
     public function setPort($port)
     {
-        $this->port = $port;
-        return $this;
+        $url = clone $this;
+        $url->port = $port;
+        return $url;
     }
 
     /**
@@ -91,9 +92,10 @@ class PHPVAL_Url_Absolute extends PHPVAL_Url_Relative
      */
     public function setUsernameAndPassword($username, $password)
     {
-        $this->username = $username;
-        $this->password = $password;
-        return $this;
+        $url = clone $this;
+        $url->username = $username;
+        $url->password = $password;
+        return $url;
     }
     
     // ============
