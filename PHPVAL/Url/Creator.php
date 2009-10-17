@@ -1,6 +1,6 @@
 <?php
 /**
- * phpval
+ * PHPVAL - Value objects for PHP applications
  * 
  * Copyright (c) 2009, David Winterbottom <david.winterbottom@gmail.com>.
  * All rights reserved.
@@ -32,6 +32,9 @@ class PHPVAL_Url_Creator
      */
     private $urlComponents;
     
+    /**
+     * @return string
+     */
     private function getProtocolFromGlobals()
     {
         if (isset($_SERVER['HTTPS']) && !empty($_SERVER['HTTPS'])) {
@@ -41,6 +44,9 @@ class PHPVAL_Url_Creator
         }
     }
     
+    /**
+     * @return string
+     */
     private function getDomainFromGlobals()
     {
         if (!isset($_SERVER['HTTP_HOST'])) {
@@ -49,6 +55,9 @@ class PHPVAL_Url_Creator
         return $_SERVER['HTTP_HOST'];
     }
     
+    /**
+     * @return string
+     */
     private function getPathnameFromGlobals()
     {
         if (!isset($_SERVER['REQUEST_URI'])) return '';
@@ -56,6 +65,9 @@ class PHPVAL_Url_Creator
         return $components[0];
     }
     
+    /**
+     * @return string
+     */
     private function getQueryStringFromGlobals()
     {
         if (!isset($_SERVER['REQUEST_URI'])) return '';
@@ -63,46 +75,73 @@ class PHPVAL_Url_Creator
         return (isset($components[1])) ? $components[1] : '';
     }
     
+    /**
+     * @return string
+     */
     private function getUrlComponent($key)
     {
         return isset($this->urlComponents[$key]) ? $this->urlComponents[$key] : null; 
     }
     
+    /**
+     * @return string
+     */
     private function getProtocolFromString()
     {
         return $this->getUrlComponent('scheme');
     }
     
+    /**
+     * @return string
+     */
     private function getDomainFromString()
     {
         return $this->getUrlComponent('host');
     }
     
+    /**
+     * @return string
+     */
     private function getPathnameFromString()
     {
         return $this->getUrlComponent('path');
     }
     
+    /**
+     * @return string
+     */
     private function getQueryStringFromString()
     {
         return $this->getUrlComponent('query');
     }
     
+    /**
+     * @return string
+     */
     private function getHashFromString()
     {
         return $this->getUrlComponent('fragment');
     }
     
+    /**
+     * @return string
+     */
     private function getPortFromString()
     {
         return $this->getUrlComponent('port');
     }
     
+    /**
+     * @return string
+     */
     private function getUsernameFromString()
     {
         return $this->getUrlComponent('user');
     }
     
+    /**
+     * @return string
+     */
     private function getPasswordFromString()
     {
         return $this->getUrlComponent('pass');

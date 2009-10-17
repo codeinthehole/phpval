@@ -1,6 +1,6 @@
 <?php
 /**
- * phpval
+ * PHPVAL - Value objects for PHP applications
  * 
  * Copyright (c) 2009, David Winterbottom <david.winterbottom@gmail.com>.
  * All rights reserved.
@@ -45,7 +45,9 @@ class PHPVAL_Url_Relative
     protected $hash;
     
     /**
-     * Protected constructor - use the factory methods to create
+     * @param string $pathname
+     * @param string $queryString
+     * @param string $hash
      */
     public function __construct($pathname=self::PATH_SEPARATOR, $queryString=null, $hash=null) 
     {
@@ -65,7 +67,7 @@ class PHPVAL_Url_Relative
      * always '/'.
      *
      * @param string $pathname
-     * @return url_Object
+     * @return PHPVAL_Url_Relative
      */
     public function setPathname($pathname=self::PATH_SEPARATOR)
     {
@@ -80,10 +82,8 @@ class PHPVAL_Url_Relative
     }
     
     /**
-     * Sets the query params
-     * 
      * @param array $params
-     * @return url_Object
+     * @return PHPVAL_Url_Relative
      */
     public function setQueryParams(array $params)
     {
@@ -101,11 +101,9 @@ class PHPVAL_Url_Relative
     }
     
     /**
-     * Adds query params
-     * 
      * @param string $parameter
      * @param string $value
-     * @return url_Object
+     * @return PHPVAL_Url_Relative
      */
     public function setQueryParam($parameter, $value='')
     {
@@ -117,9 +115,7 @@ class PHPVAL_Url_Relative
     }
     
     /**
-     * Removes all query parameters
-     * 
-     * @return url_Object
+     * @return PHPVAL_Url_Relative
      */
     public function removeQueryParams()
     {
@@ -129,9 +125,8 @@ class PHPVAL_Url_Relative
     }
     
     /**
-     * Removes a single query param
-     * 
      * @param string $parameter
+     * @return PHPVAL_Url_Relative
      */
     public function removeQueryParam($parameter)
     {
@@ -150,8 +145,6 @@ class PHPVAL_Url_Relative
     // =============
     
     /**
-     * Returns the pathname
-     *
      * @return string
      */
     public function getPathname()
@@ -160,8 +153,6 @@ class PHPVAL_Url_Relative
     }
 
     /**
-     * Returns the URL path segments
-     * 
      * @return array
      */
     public function getPathSegments()

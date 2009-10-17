@@ -1,6 +1,6 @@
 <?php
 /**
- * phpval
+ * PHPVAL - Value objects for PHP applications
  * 
  * Copyright (c) 2009, David Winterbottom <david.winterbottom@gmail.com>.
  * All rights reserved.
