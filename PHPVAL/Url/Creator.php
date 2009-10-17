@@ -27,6 +27,9 @@ require_once dirname(__FILE__).'/Absolute.php';
  */
 class PHPVAL_Url_Creator
 {
+    /**
+     * @var array
+     */
     private $urlComponents;
     
     private function getProtocolFromGlobals()
@@ -128,7 +131,10 @@ class PHPVAL_Url_Creator
      */
     public function createFromAbsoluteUrl($urlString)
     {
-        $this->urlComponents = parse_url($urlString);
+        $this->urlComponents = parse_url((string)$urlString);
+        if (!$this->urlComponents) {
+            throw new PHPVAL_Url_Exception("Could not parse URL $urlString");
+        }
         
         $url = new PHPVAL_Url_Absolute($this->getProtocolFromString(),
             $this->getDomainFromString(),
@@ -150,7 +156,7 @@ class PHPVAL_Url_Creator
     /**
      * Returns the URL object from the referring URL
      * 
-     * @return Url
+     * @return PHPVAL_Url_Absolute
      */
     public function createFromReferrer()
     {
@@ -158,28 +164,5 @@ class PHPVAL_Url_Creator
             throw new PHPVAL_Url_Exception("No HTTP_REFERER setting found");
         }
         return $this->createFromAbsoluteUrl($_SERVER['HTTP_REFERER']);
-    }
-
-    /**
-     * Creates object using a relative URL
-     *
-     * The object returned will not have a domain or protocol
-     *
-     * @param $url
-     * @return url_Object
-     */
-    public static function createFromRelativeUrl($urlString='/')
-    {
-        $urlString = (string)$urlString;
-        $url = new self;
-        if ($urlString{0} != '/') {
-            $urlString = '/'.$urlString;
-        }
-        $pathComponents = explode('?', $urlString);
-        $url->setPathname($pathComponents[0]);
-        if (count($pathComponents) > 1) {
-            $url->setQueryString($pathComponents[1]);
-        }
-        return $url;
     }
 }

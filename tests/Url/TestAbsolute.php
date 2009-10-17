@@ -31,6 +31,13 @@ class PHPVAL_Url_TestAbsolute extends PHPUnit_Framework_TestCase
         $this->assertSame(80, $this->url->getPort());
     }
     
+    public function testSetAndGetAuthentication()
+    {
+        $this->url->setUsernameAndPassword('david', 'password');
+        $this->assertSame('david', $this->url->getUsername());
+        $this->assertSame('password', $this->url->getPassword());
+    }
+    
     public function testGetBaseUrlReturnsUrlObject()
     {
         $this->assertTrue($this->url->getBaseUrl() instanceof PHPVAL_Url_Absolute);

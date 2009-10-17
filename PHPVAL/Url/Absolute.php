@@ -134,8 +134,6 @@ class PHPVAL_Url_Absolute extends PHPVAL_Url_Relative
     // =============
 
     /**
-     * Returns the protocol of the URL
-     *
      * @return string
      */
     public function getProtocol()
@@ -144,8 +142,22 @@ class PHPVAL_Url_Absolute extends PHPVAL_Url_Relative
     }
 
     /**
-     * Returns the domain of the URL
-     *
+     * @return string
+     */
+    public function getUsername()
+    {
+        return $this->username;
+    }
+    
+    /**
+     * @return string
+     */
+    public function getPassword()
+    {
+        return $this->password;
+    }
+    
+    /**
      * @return string
      */
     public function getDomain()
@@ -182,10 +194,11 @@ class PHPVAL_Url_Absolute extends PHPVAL_Url_Relative
      */
     public function toString()
     {
-        $url = parent::toString();
-        if (!empty($this->protocol) && !empty($this->domain)) {
-            $url = $this->protocol.self::PROTOCOL_SEPARATOR.$this->domain.$url;
+        $url = $this->protocol.self::PROTOCOL_SEPARATOR;
+        if ($this->username && $this->password) {
+            $url .= sprintf("%s:%s", $this->username, $this->password);
         }
+        $url .= $this->domain.parent::toString(); 
         return $url;
     }
 }
