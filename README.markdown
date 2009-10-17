@@ -12,4 +12,13 @@ as value objects in the traditional sense.
 
 For more information on value objects, see http://c2.com/cgi/wiki?ValueObject
 
+Installation
+------------
+
+No PEAR installer just yet, simply copy the contents of the PHPVAL/ folder to somewhere on your 
+PHP path.  For example:
+    cd ~/workspace
+    git clone git://github.com/codeinthehole/phpval.git
+    cp -r phpval/PHPVAL/* /usr/share/php
+
 All feedback welcome.

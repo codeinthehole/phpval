@@ -1,5 +1,10 @@
 <?php
 
+if (!defined('PHPUnit_MAIN_METHOD')) {
+    define('PHPUnit_MAIN_METHOD', 'PHPVAL_Url_AllTests::main');
+}
+
+
 require_once dirname(__FILE__).'/../Bootstrap.php';
 require_once dirname(__FILE__).'/TestRelative.php';
 require_once dirname(__FILE__).'/TestAbsolute.php';
@@ -15,4 +20,8 @@ class PHPVAL_Url_AllTests
         $suite->addTestSuite('PHPVAL_Url_TestCreator');
         return $suite;
     }
+}
+
+if (PHPUnit_MAIN_METHOD == 'PHPVAL_Url_AllTests::main') {
+    PHPVAL_Url_AllTests::main();
 }
