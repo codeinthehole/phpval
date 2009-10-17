@@ -11,6 +11,7 @@
  * @license http://www.opensource.org/licenses/bsd-license.php  BSD License
  */
 
+require_once dirname(__FILE__).'/Protocols.php';
 require_once dirname(__FILE__).'/Relative.php';
 
 /**
@@ -27,13 +28,6 @@ require_once dirname(__FILE__).'/Relative.php';
  */
 class PHPVAL_Url_Absolute extends PHPVAL_Url_Relative
 {
-    const PROTOCOL_HTTP = 'http';
-    const PROTOCOL_HTTPS = 'https';
-    const PROTOCOL_FTP = 'ftp';
-    const PROTOCOL_GOPHER = 'gopher';
-    const PROTOCOL_MAILTO = 'mailto';
-    const PROTOCOL_TELNET = 'telnet';
-
     const PROTOCOL_SEPARATOR = '://';
     
     /**
@@ -44,7 +38,7 @@ class PHPVAL_Url_Absolute extends PHPVAL_Url_Relative
     /**
      * @var string
      */
-    protected $host;
+    protected $domain;
     
     /**
      * @var int
@@ -52,16 +46,56 @@ class PHPVAL_Url_Absolute extends PHPVAL_Url_Relative
     protected $port;
     
     /**
-     * Protected constructor - use the factory methods to create
+     * @var string
      */
-    public function __construct($protocol, $domain, $port=80, $pathname=self::PATH_SEPARATOR, $queryString='', $hash='') 
+    protected $username;
+    
+    /**
+     * @var string
+     */
+    protected $password;
+    
+    /**
+     * Construct using the most common URL components - use the setter methods to set
+     * the less common port/user/password components of a URL.
+     * 
+     * @param string $protocol
+     * @param string $domain
+     * @param string $pathname
+     * @param string $queryString
+     * @param string $hash
+     */
+    public function __construct($protocol, $domain,
+        $pathname=self::PATH_SEPARATOR, $queryString=null, $hash=null) 
     {
         $this->protocol = (string)$protocol;
         $this->domain = (string)$domain;
         $this->port = (int)$port;
         parent::__construct($pathname, $queryString, $hash);
     }
+    
+    /**
+     * @param int $port
+     * @return PHPVAL_Url_Absolute
+     */
+    public function setPort($port)
+    {
+        $this->port = $port;
+        return $this;
+    }
 
+    /**
+     * @param string $username
+     * @param string $password
+     * @return PHPVAL_Url_Absolute
+     */
+    public function setUsernameAndPassword($username, $password)
+    {
+        $this->username = $username;
+        $this->password = $password;
+        return $this;
+    }
+    
     // ============
     // MANIPULATION
     // ============
@@ -72,11 +106,11 @@ class PHPVAL_Url_Absolute extends PHPVAL_Url_Relative
      * @param string $domain
      * @return url_Object
      */
-    public function setProtocol($protocol=self::PROTOCOL_HTTP)
+    public function setProtocol($protocol=PHPVAL_Url_Protocols::HTTP)
     {
         $newUrl = clone $this;
         $newUrl->protocol = $protocol;
-        if (self::PROTOCOL_HTTPS == $protocol) {
+        if (PHPVAL_Url_Protocols::HTTPS == $protocol) {
             $newUrl->port = 443;
         }
         return $newUrl;

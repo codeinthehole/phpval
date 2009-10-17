@@ -1,81 +1,163 @@
 <?php
+/**
+ * phpval
+ * 
+ * Copyright (c) 2009, David Winterbottom <david.winterbottom@gmail.com>.
+ * All rights reserved.
+ * 
+ * @package phpval
+ * @author David Winterbottom <david.winterbottom@gmail.com>
+ * @copyright 2009 David Winterbottom <david.winterbottom@gmail.com>
+ * @license http://www.opensource.org/licenses/bsd-license.php  BSD License
+ */
+
+require_once dirname(__FILE__).'/Absolute.php';
+
+/**
+ * Simple URL object.
+ *
+ * Note that the protocol and domain components are optional, it is perfectly valid
+ * to use URLs that are relative to the document root (eg /my/page?q=barry).
+ *
+ * See http://www.ietf.org/rfc/rfc2396.txt for the appropriate RFC
+ * 
+ * @author David Winterbottom <david.winterbottom@gmail.com>
+ * @copyright 2009 David Winterbottom <david.winterbottom@gmail.com>
+ * @license http://www.opensource.org/licenses/bsd-license.php  BSD License
+ */
 class PHPVAL_Url_Creator
 {
-// ========
+    private $urlComponents;
+    
+    private function getProtocolFromGlobals()
+    {
+        if (isset($_SERVER['HTTPS']) && !empty($_SERVER['HTTPS'])) {
+            return PHPVAL_Url_Protocols::HTTPS;
+        } else {
+            return PHPVAL_Url_Protocols::HTTP;
+        }
+    }
+    
+    private function getDomainFromGlobals()
+    {
+        if (!isset($_SERVER['HTTP_HOST'])) {
+            throw new PHPVAL_Url_Exception("No HTTP_HOST header found to retrieve domain from");
+        }
+        return $_SERVER['HTTP_HOST'];
+    }
+    
+    private function getPathnameFromGlobals()
+    {
+        if (!isset($_SERVER['REQUEST_URI'])) return '';
+        $components = explode('?', $_SERVER['REQUEST_URI']);
+        return $components[0];
+    }
+    
+    private function getQueryStringFromGlobals()
+    {
+        if (!isset($_SERVER['REQUEST_URI'])) return '';
+        $components = explode('?', $_SERVER['REQUEST_URI']);
+        return (isset($components[1])) ? $components[1] : '';
+    }
+    
+    private function getUrlComponent($key)
+    {
+        return isset($this->urlComponents[$key]) ? $this->urlComponents[$key] : null; 
+    }
+    
+    private function getProtocolFromString()
+    {
+        return $this->getUrlComponent('scheme');
+    }
+    
+    private function getDomainFromString()
+    {
+        return $this->getUrlComponent('host');
+    }
+    
+    private function getPathnameFromString()
+    {
+        return $this->getUrlComponent('path');
+    }
+    
+    private function getQueryStringFromString()
+    {
+        return $this->getUrlComponent('query');
+    }
+    
+    private function getHashFromString()
+    {
+        return $this->getUrlComponent('fragment');
+    }
+    
+    private function getPortFromString()
+    {
+        return $this->getUrlComponent('port');
+    }
+    
+    private function getUsernameFromString()
+    {
+        return $this->getUrlComponent('user');
+    }
+    
+    private function getPasswordFromString()
+    {
+        return $this->getUrlComponent('pass');
+    }
+    
+    // ========
     // CREATION
     // ========
 
     /**
      * Create object using current requests data from the $_SERVER superglobal
      *
-     * @return Url
+     * @return PHPVAL_Url_Absolute
      */
-    public static function createFromCurrentRequest()
+    public function createFromCurrentRequest()
     {
-        $url = new self;
-
-        // Set protocol
-        if (isset($_SERVER['HTTPS']) && !empty($_SERVER['HTTPS'])) {
-            $url->setProtocol(self::PROTOCOL_HTTPS);
-        } else {
-            $url->setProtocol(self::PROTOCOL_HTTP);
-        }
-        if (isset($_SERVER['HTTP_HOST'])) {
-            $url->setDomain($_SERVER['HTTP_HOST']);
-        }
-
-        $components = explode('?', $_SERVER['REQUEST_URI']);
-        $url->setPathname($components[0]);
-
-        // Set query string and params
-        if (isset($components[1])) {
-            $url->setQueryString($components[1]);
-        }
-
-        return $url;
+        return new PHPVAL_Url_Absolute($this->getProtocolFromGlobals(),
+            $this->getDomainFromGlobals(),
+            $this->getPathnameFromGlobals(), 
+            $this->getQueryStringFromGlobals());
     }
 
+    /**
+     * @param string $urlString
+     * @return PHPVAL_Url_Absolute
+     */
+    public function createFromAbsoluteUrl($urlString)
+    {
+        $this->urlComponents = parse_url($urlString);
+        
+        $url = new PHPVAL_Url_Absolute($this->getProtocolFromString(),
+            $this->getDomainFromString(),
+            $this->getPathnameFromString(), 
+            $this->getQueryStringFromString(),
+            $this->getHashFromString());
+        
+        $port = $this->getPortFromString();
+        if ($port) $url->setPort($port);    
+            
+        $user = $this->getUsernameFromString();
+        $password = $this->getPasswordFromString();
+        if ($user && $password) {
+            $url->setUsernameAndPassword($username, $password);
+        } 
+        return $url;
+    }
+    
     /**
      * Returns the URL object from the referring URL
      * 
      * @return Url
      */
-    public static function createFromReferrer()
+    public function createFromReferrer()
     {
-        return self::createFromAbsoluteUrl($_SERVER['HTTP_REFERER']);
-    }
-
-    /**
-     * Create object with a full URL
-     *
-     * @param string $url
-     * @return Url
-     */
-    public static function createFromAbsoluteUrl($urlString)
-    {
-        $urlString = trim($urlString);
-        
-        $protocol = null;
-        $protocolComponents = explode('://', $urlString);
-        if (count($protocolComponents) == 2) $protocol = $protocolComponents[0];
-        
-        $components = explode('/', $urlString);
-        $host = $components[2];
-
-        $port = null;
-    
-        $pathname = '/';
-        $queryString = null;
-        if (count($components) > 3) {
-            $pathnameAndQueryString = '/'.implode('/', array_slice($components, 3));
-            $pathComponents = explode('?', $pathnameAndQueryString);
-            $pathname = $pathComponents[0];
-
-            if (count($pathComponents) > 1) {
-                $queryString = $pathComponents[1];
-            }
+        if (!isset($_SERVER['HTTP_REFERER'])) {
+            throw new PHPVAL_Url_Exception("No HTTP_REFERER setting found");
         }
-        return new self($protocol, $host, $port, $pathname, $queryString);
+        return $this->createFromAbsoluteUrl($_SERVER['HTTP_REFERER']);
     }
 
     /**

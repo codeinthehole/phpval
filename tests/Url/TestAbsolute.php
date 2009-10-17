@@ -1,15 +1,18 @@
 <?php
 
 require_once dirname(__FILE__).'/../Bootstrap.php';
-require_once dirname(__FILE__).'/../../PHPVAL/Url/Absolute.php';
+require_once PATH_TO_PHPVAL.'/Url/Absolute.php';
 
 class PHPVAL_Url_TestAbsolute extends PHPUnit_Framework_TestCase
 {
+    /**
+     * @var PHPVAL_Url_Absolute
+     */
     private $url;
     
     public function setUp()
     {
-        $this->url = new PHPVAL_Url_Absolute('http', 'www.google.com', 80, '/page/123', 'q=hello&nocache', 'randomhash');
+        $this->url = new PHPVAL_Url_Absolute('http', 'www.google.com', '/page/123', 'q=hello&nocache', 'randomhash');
     }
     
     public function testGetProtocol()
@@ -24,6 +27,7 @@ class PHPVAL_Url_TestAbsolute extends PHPUnit_Framework_TestCase
     
     public function testGetPort()
     {
+        $this->url->setPort(80);
         $this->assertSame(80, $this->url->getPort());
     }
     

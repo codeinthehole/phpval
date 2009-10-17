@@ -1,7 +1,7 @@
 <?php
 
 require_once dirname(__FILE__).'/../Bootstrap.php';
-require_once dirname(__FILE__).'/../../PHPVAL/Url/Relative.php';
+require_once PATH_TO_PHPVAL.'/Url/Absolute.php';
 
 class PHPVAL_Url_TestRelative extends PHPUnit_Framework_TestCase
 {

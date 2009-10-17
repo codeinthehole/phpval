@@ -47,7 +47,7 @@ class PHPVAL_Url_Relative
     /**
      * Protected constructor - use the factory methods to create
      */
-    public function __construct($pathname=self::PATH_SEPARATOR, $queryString='', $hash='') 
+    public function __construct($pathname=self::PATH_SEPARATOR, $queryString=null, $hash=null) 
     {
         $this->pathname = (string)$pathname;
         $this->queryString = (string)$queryString;
@@ -232,6 +232,14 @@ class PHPVAL_Url_Relative
             return empty($value) ? true : $value;
         }
         return null;
+    }
+    
+    /**
+     * @return string
+     */
+    public function getHash()
+    {
+        return $this->hash;
     }
     
     /**
